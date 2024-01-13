@@ -1,0 +1,205 @@
+\documentclass[12pt]{extarticle}
+\usepackage{amssymb}
+\usepackage[utf8]{inputenc}
+\usepackage{cite}
+\usepackage{blindtext}
+\usepackage{geometry}
+\usepackage{comment}
+\usepackage{graphicx}
+\graphicspath{{ims/}}
+\usepackage{hyperref}
+\usepackage{placeins}
+\usepackage{amsmath}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\geometry{
+	a4paper,
+	total={170mm,257mm},
+	left=30mm,
+	right=30mm,
+	top=20mm,
+}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+	backgroundcolor=\color{backcolour},   
+	commentstyle=\color{codegreen},
+	keywordstyle=\color{magenta},
+	numberstyle=\tiny\color{codegray},
+	stringstyle=\color{codepurple},
+	basicstyle=\ttfamily\footnotesize,
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                 
+	numbers=left,                    
+	numbersep=5pt,                  
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=2
+}
+\usepackage{dsfont}
+
+\lstset{style=mystyle}
+
+\title{\textbf{HW2-Report}}
+\author{Saman Soleimani 400206284}
+\date{}
+
+
+\begin{document}
+\maketitle{\textbf{Question 1:}}\\
+\maketitle{\textbf{a)}} Assume $X$ and $X^{'}$ are two neighboring datasets that differs on ith data.
+\begin{align*}
+	GS = \underset{X\sim X^{'}}{\max} \lVert \nabla_\theta  L(\theta, X) - \nabla_\theta L(\theta, X^{'})\rVert_1 \\ 
+	& = \frac{1}{n}\ \underset{x_i \neq x'_i}{\max}\ \lVert -\frac{\begin{bmatrix}
+		 1 & x_{i1} & \dots & x_{id}
+	\end{bmatrix}^T y_i e^{-y_i f_\theta(x_i)}}{1+e^{-y_i f_\theta(x_i)}}\\
+	&+\frac{\begin{bmatrix}
+		1 & x^{'}_{i1} & \dots & x^{'}_{id}
+	\end{bmatrix}^T y^{'}_i e^{-y^{'}_i f_\theta(x^{'}_i)}}{1+e^{-y^{'}_i f_\theta(x^{'}_i)}} \rVert_1 \\
+	&\le  \underset{x_i \in [0,1]^d}{\max}\  \frac{2}{n}\ \lVert \frac{\begin{bmatrix}
+			1 & x_{i1} & \dots & x_{id}
+		\end{bmatrix}^T y_i e^{-y_i f_\theta(x_i)}}{1+e^{-y_i f_\theta(x_i)}}\rVert_1  \\
+	& = \frac{2}{n}(d+1)\frac{e}{1+e}
+\end{align*}
+If we want to use the basic composition of the Laplace mechanism, the privacy cost in each iteration should be $\frac{\varepsilon}{T}$. Thus, the Laplace noise $Lap\left(\frac{2T(d+1)\frac{e}{1+e}}{n\varepsilon}\right)$ should be added to the gradient of the loss function in each iteration. The variance of this noise is $\frac{8T^2(d+1)^2 \frac{e^2}{(1+e)^2}}{n^2\varepsilon^2}$.\\\\
+\maketitle{\textbf{b)}} 
+\(\log(1+e^x)\) is convex and nondecreasing, and \(y f_\theta(x)\) is convex with respect to \(\theta\). Therefore, the composition of these functions, which is the loss function on one sample, is convex. Consequently, the loss function on all samples, \(L(\theta,X)\), is convex.
+\\
+So, if $\theta^{*}=\underset{\theta \in B_2(0, R)^d}{\mathrm{argmin}} L(\theta, X)$, $g^t = \nabla_\theta L(\theta^t, X)$ is the gradient, $\tilde{g}^{t}$ is an unbiased estimate of the gradient (similar to what we encounter in Noisy PGD), and $\eta$ is the learning rate:\\
+\begin{align*}
+	&\mathbb{E}[L(\theta^t, X) -  L(\theta^{*}, X)] = \mathbb{E}[L(\theta^t, X)] -  L(\theta^{*}, X) \\
+	&\le \mathbb{E}\left[\frac{1}{\eta}\langle \eta \tilde{g}^{t}, \theta^{t} - \theta^{*} \rangle\right] \\
+	&\leq \mathbb{E}\left[\frac{1}{2\eta}\left(\|\eta \tilde{g}^{t}\|^2 + \|\theta^{t} - \theta^{*}\|^2 - \|\theta^{t}-\eta \tilde{g}^{t} - \theta^{*}\|^2\right)\right] \\
+\end{align*}
+
+Because $\mathcal{C}$, the domain set of $\theta$ is convex, if $\tilde{u}^{t} = \theta^{t} - \eta \tilde{g}^{t}$, then this property holds for the projection function $\pi_\mathcal{C}(.)$ : $\|\pi_\mathcal{C}(\tilde{u}^{t})-y\|^2 \le \|\tilde{u}^{t}-y\|^2  ; \forall y \in \mathcal{C}$.
+
+\begin{align*}
+	\mathbb{E}[L(\theta^t, X)] -  L(\theta^{*}, X) &\leq \mathbb{E}\left[\frac{1}{2\eta}\left(\|\eta \tilde{g}^{t}\|^2 + \|\theta^{t} - \theta^{*}\|^2 - \|\pi_\mathcal{C}(\theta^{t}-\eta \tilde{g}^{t}) - \theta^{*}\|^2\right)\right]\\
+	& = \mathbb{E}\left[\frac{1}{2\eta}\left(\|\eta \tilde{g}^{t}\|^2 + \|\theta^{t} - \theta^{*}\|^2 - \|\theta^{t+1} - \theta^{*}\|^2\right)\right]\\
+	& = \frac{\eta}{2}\mathbb{E}[\|\tilde{g}^{t}\|^2]+\frac{1}{2\eta}\mathbb{E} [\|\theta^{t} - \theta^{*}\|^2-\|\theta^{t+1} - \theta^{*}\|^2]
+\end{align*}
+
+\begin{equation}
+	\Rightarrow\quad \mathbb{E}[L(\theta^t, X)] - L(\theta^{*}, X) \leq \frac{\eta}{2}\mathbb{E}[\|\tilde{g}^{t}\|^2] + \frac{1}{2\eta}\mathbb{E} [\|\theta^{t} - \theta^{*}\|^2 - \|\theta^{t+1} - \theta^{*}\|^2]\label{eq:Third}
+\end{equation}
+
+Due to the convexity of the loss landscape and the application of Jensen's inequality, we can infer:
+
+\begin{equation}
+	\mathbb{E}[L(\theta^\text{priv}, X)] = \mathbb{E}[L(\frac{1}{T} \sum_{t=0}^{T-1} \theta^t, X)] \le \frac{1}{T} \sum_{t=0}^{T-1}\mathbb{E}[L(\theta^t, X)] \label{eq:Four}
+\end{equation}
+
+References to equations \ref{eq:Third} and \ref{eq:Four} result in:
+
+\begin{align*}
+	\mathbb{E}[L(\theta^\text{priv}, X)] -  L(\theta^{*}, X) &\leq \frac{\eta}{2T}\sum_{t=0}^{T-1}\mathbb{E}[\|\tilde{g}^{t}\|^2] + \frac{1}{2\eta T}\sum_{t=0}^{T-1}\mathbb{E} [\|\theta^{t} - \theta^{*}\|^2 - \|\theta^{t+1} - \theta^{*}\|^2]\\
+	&\leq \frac{\eta}{2}\max_t \mathbb{E}[\|\tilde{g}^{t}\|^2] + \frac{1}{2\eta T}\mathbb{E} [\|\theta^{0}- \theta^{*}\|^2 - \|\theta^{T}- \theta^{*}\|^2]\\
+	&\leq \frac{\eta}{2}\max_t \mathbb{E}[\|\tilde{g}^{t}\|^2] + \frac{1}{2\eta T}\mathbb{E} [\|\theta^{0}-\theta^{T}\|^2]
+\end{align*}
+\begin{equation}
+	\Rightarrow\quad \mathbb{E}[L(\theta^\text{priv}, X)] -  L(\theta^{*}, X) \leq \frac{\eta}{2}\max_t \mathbb{E}[\|\tilde{g}^{t}\|^2] + \frac{1}{2\eta T}\mathbb{E} [\|\theta^{0}-\theta^{T}\|^2]\label{eq:Five}
+\end{equation}
+Because $\theta \in B_2(0, R)^d$, it follows that $\|\theta^{0}-\theta^{T}\|^2 \le 4R^2$. Let $\tilde{g}^{t} = {g}^{t} + Z$, where $Z$ is assumed to be a vector with entries sampled from $Lap\left(\frac{2T(d+1)\frac{e}{1+e}}{n\varepsilon}\right)$. Therefore, $\mathbb{E}[|\tilde{g}^{t}|^2] = \mathbb{E}[\|g^{t}\|^2 + \|Z\|^2 + 2\langle g^{t},Z\rangle] = \|g^{t}\|^2 + \mathbb{E}[\|Z\|^2] \le G^2 + (d+1)\frac{8T^2(d+1)^2 \frac{e^2}{(1+e)^2}}{n^2\varepsilon^2}$, where $G$ is the Lipschitzness of the loss function. So, these results and Equation \ref{eq:Five} yield:
+\begin{equation}
+	\mathbb{E}[L(\theta^\text{priv}, X)] -  L(\theta^{*}, X) \leq \frac{\eta}{2}( G^2 + \frac{8T^2(d+1)^3 \frac{e^2}{(1+e)^2}}{n^2\varepsilon^2}) + \frac{4R^2}{2\eta T}\label{eq:Six}
+\end{equation}
+
+The value of \(G\) should be determined based on the information provided by the problem.
+\begin{align*}
+	\|\nabla_\theta  L(\theta,X)\| 
+	&\le \frac{1}{n}\ \sum_{i=1}^{n} \underset{x_i \neq x'_i}{\max}\ \lVert -\frac{\begin{bmatrix}
+			1 & x_{i1} & \dots & x_{id}
+		\end{bmatrix}^T y_i e^{-y_i f_\theta(x_i)}}{1+e^{-y_i f_\theta(x_i)}} \| \le \frac{e}{1+e} \sqrt{d+1} \\
+\end{align*}
+
+So, I set \(G = \frac{e}{1+e} \sqrt{d+1}\) and substitute this into \ref{eq:Six}:
+\begin{equation}
+	\mathbb{E}[L(\theta^\text{priv}, X)] -  L(\theta^{*}, X) \leq \frac{\eta}{2}( (d+1) \frac{e^2}{(1+e)^2} + \frac{8T^2(d+1)^3 \frac{e^2}{(1+e)^2}}{n^2\varepsilon^2}) + \frac{4R^2}{2\eta T}\label{eq:Eleven}
+\end{equation}
+
+Therefore, if we set \(T=\frac{n\varepsilon}{\sqrt{8}(d+1)}\), \ref{eq:Eleven} gives:
+\begin{equation}
+	\mathbb{E}[L(\theta^\text{priv}, X)] -  L(\theta^{*}, X) \leq  \eta ( (d+1) \frac{e^2}{(1+e)^2}) + \frac{4R^2}{2\eta T}\label{eq:Twelve}
+\end{equation}
+
+I set \(\eta = \frac{\sqrt{2}\frac{1+e}{e}R}{\sqrt{(d+1)T}}\), \ref{eq:Twelve} gives:
+\begin{equation*}
+	\mathbb{E}[L(\theta^\text{priv}, X)] -  L(\theta^{*}, X) \leq  \sqrt{\frac{2e^2R^2(d+1)}{(1+e)^2T}} = \sqrt{\frac{2\sqrt{8}e^2R^2(d+1)^2}{(1+e)^2n\varepsilon}}
+\end{equation*}
+
+Because \(\mathbb{E}[L(\theta^\text{priv}, X)] -  L(\theta^{*}, X)\leq \alpha\), so the underlying inequality should be true:
+\begin{align*}
+	\sqrt{\frac{2\sqrt{8}e^2R^2(d+1)^2}{(1+e)^2n\varepsilon}} \leq \alpha\\
+	\rightarrow  \frac{2\sqrt{8}e^2R^2(d+1)^2}{(1+e)^2\alpha^2\varepsilon} \leq n	\label{eq:Thirteen}
+\end{align*}
+
+So, \(K\) should be greater than \(\frac{2\sqrt{8}e^2}{(1+e)^2}\).
+\\\\
+\maketitle{\textbf{Question 2:}}\\\\
+\maketitle{\textbf{a)}}For global sensitivity, a graph on \(\mathcal{G}\) should be found. If we change the connectivity of edges incident to one node, the number of isolated nodes should be maximum. A star graph is a good choice because if we remove the edges incident to the center node, all \(n\) nodes will be isolated. So, \(GS_q = n\).
+\\\\
+\maketitle{\textbf{b)}} For minimum local sensitivity, $\underset{G\in\mathcal{G}}{\min}\ \underset{G\sim G^{'}}{\max}\ \| q(G) - q(G^{'})\|$, a graph should be found such that for all its neighbors, the difference between the number of isolated nodes of this graph and all its neighbors should be minimum. A complete graph should be a good choice because, if we remove even all edges incident to a node, only one node will be isolated. So, \(\underset{G\in\mathcal{G}}{\min}\ LS_q = 1\).
+\begin{comment}
+\\\\
+\maketitle{\textbf{c)}} For maximum local sensitivity on \(\mathcal{H}\), $\underset{G\in\mathcal{H}}{\max}\ \underset{G\sim G^{'}}{\max}\ \| q(G) - q(G^{'})\|$, I should find some graph in the hypothesis set such that the difference between the number of isolated nodes of this graph and all its neighbors should be maximum. In this problem, the neighboring graph does not need to be in the hypothesis set. A graph with a star graph with $d+1$ nodes in one isolated subgraph and the other subgraph can be everything is the answer. So, in this graph, the center of the star graph has degree $d$, and if we cut its incident, $d+1$ new isolated nodes exist. So, \(\underset{G\in\mathcal{G}}{\max}\ LS_q = d+1\).
+\\\\
+\maketitle{\textbf{d)}} The restricted sensitivity, $\underset{G,G' \in \mathcal{H}, G \sim G'}{\max} |q(G) - q(G')|$, is similar to the maximum local sensitivity on $\mathcal{H}$; the difference is that the neighboring graph should be in $\mathcal{H}$.\\ If the number of nodes is greater than or equal to $2(d+1)$, assume a graph with 3 isolated subgraphs: the first and second isolated subgraphs are star graphs, and the third subgraph can be anything, conditioned on the entire graph being in the hypothesis set. In this setting, the restricted sensitivity is $d+1$.\\
+ If the number of nodes is between $d+2$ and $2(d+1)$, a graph with one isolated star subgraph with $d+1$ nodes and the other isolated subgraph having $n-(d+1)$ nodes, where none of their nodes are isolated, is considered. The best neighbor of this graph is obtained by cutting the $n-(d+1)$ edges of the star subgraph and adding $n-(d+1)$ edges to the other subgraph. Consequently, the degree of the center of the previous star subgraph remains $d$, ensuring that the neighboring graph is in the hypothesis set. In this setting, the restricted sensitivity is $n-(d+1)$.\\
+ Now, if the graph has $d+2$ nodes, one can consider a star graph with $d+1$ nodes and one of the nodes connected to the center of the graph connects to the $(d+2)$th node. If we delete the edge connected from the star subgraph to the $(d+2)$th graph, one node is added to the isolated nodes. Therefore, the restricted sensitivity is $1$.\\
+  If the number of nodes is $d+1$, the best graph to choose is the star graph, but if we delete even one of the edges to obtain isolated nodes, the neighboring graph cannot be in the hypothesis set. Thus, the restricted sensitivity is $0$. Lastly, the number of nodes cannot be lower than $d+1$. Therefore, we can conclude as follows:
+
+\[ RS_{q}^{\mathcal{H}} = 
+\begin{cases}
+	d + 1 & \text{if } n \geq 2(d+1) \\
+	n-(d+1) & \text{if } d+1 \leq n < 2(d+1)\\
+	\text{Impossible} & \text{if }  n < d+1
+\end{cases}
+\]
+\end{comment}
+\\\\
+\maketitle{\textbf{c)}} For the maximum local sensitivity on \(\mathcal{H}\), $\underset{G\in\mathcal{H}}{\max}\ \underset{G\sim G'}{\max}\ \| q(G) - q(G')\|$, I need to find a graph in the hypothesis set such that the difference between the number of isolated nodes in this graph and all its neighbors is maximized. The hypothesis set consists of graphs with a maximum vertex degree at most \(d\). Therefore, let's consider an \(n\)-node empty graph for \(G\) with \(n\)-node isolated, and \(G'\) as a star graph with \(n\) nodes and 0 nodes isolated. Note that \(G'\) may not be in the hypothesis set. Thus, \(\underset{G\in\mathcal{H}}{\max}\ LS_q = n\).
+\\\\
+\maketitle{\textbf{d)}} The restricted sensitivity, $\underset{G,G' \in \mathcal{H}, G \sim G'}{\max} |q(G) - q(G')|$, is similar to the maximum local sensitivity on $\mathcal{H}$; the difference is that the neighboring graph should be in $\mathcal{H}$. Therefore, assume an \(n\)-node empty graph for \(G\) with \(n\)-node isolated, and \(G'\) consists of two subgraphs: the first is a star graph with \(d+1\) nodes, and the second is an empty graph with \(n-(d+1)\) nodes. This configuration results in \(n-(d+1)\) isolated nodes. Hence, $RS_{q}^{\mathcal{H}} = d+1$.
+\\\\
+\maketitle{\textbf{Question 3:}}\\\\
+\maketitle{\textbf{a)}} 
+
+\textbf{i)} The global sensitivity is infinite because one can change some finite data to infinite data in a neighboring dataset.
+
+\textbf{ii)} If we consider every dataset, we can replace one data point with a very large or very small value, leading to infinite local sensitivity. Therefore, the minimum local sensitivity is infinite.
+
+\textbf{iii)} For the restricted sensitivity, if we replace one data point equal to $a$ with $b$, the restricted sensitivity becomes $\frac{b-a}{n}$.
+
+\textbf{iv)} Function \(f\) from $\mathcal{H}$ has restricted sensitivity $\frac{b-a}{n}$; thus, it is $\frac{b-a}{n}$ Lipschitz with respect to the Hamming norm. An explicit Lipschitz extension from $\mathcal{H}$ to $\mathcal{G}$ is given by:
+\[\widetilde{f}(x) = \frac{1}{n}\sum_{i=1}^{n} (\text{truncate}\  x_i\  \text{to}\ [a,b])\]
+
+Therefore, this function is in \(\mathcal{G}\) and is Lipschitz with $\frac{b-a}{n}$.
+\\
+\maketitle{\textbf{b)}}
+
+\textbf{i)} For global sensitivity, because the dataset can include everything in real numbers, the gap between the middle of the ordered dataset and their adjacent data can be infinite. So, the global sensitivity is infinite.
+
+\textbf{ii)} For the minimum local sensitivity, if all data in the dataset has unique quantity, choosing any arbitrary data and changing it to any real number will not affect the median. The new data cannot be placed between the gap of the middle of the ordered dataset and their adjacent data because this gap is zero. Therefore, the minimum local sensitivity is zero.
+
+\textbf{iii)} For the restricted sensitivity, the gap between the middle of the ordered dataset and their adjacent data can be at most $b-a$.
+\\
+\maketitle{\textbf{c)}}
+
+\textbf{i)}For global sensitivity, a graph on \(\mathcal{G}\) should be found. If we change the connectivity of edges incident to one node, the number of isolated nodes should be maximum. A star graph is a good choice because if we remove the edges incident to the center node, all \(n\) nodes will be isolated. So, \(GS_q = n\).
+
+\textbf{ii)} For the minimum local sensitivity, $\underset{G\in\mathcal{G}}{\min}\ \underset{G\sim G^{'}}{\max}\ \| q(G) - q(G^{'})\|$, a graph should be found such that for all its neighbors, the difference between the number of isolated nodes of this graph and all its neighbors should be minimum. A complete graph should be a good choice because, if we remove even all edges incident to a node, only one node will be isolated. So, \(\underset{G\in\mathcal{G}}{\min}\ LS_q = 1\).
+
+\textbf{iii)}The restricted sensitivity, $\underset{G,G' \in \mathcal{H}, G \sim G'}{\max} |q(G) - q(G')|$, is similar to the maximum local sensitivity on $\mathcal{H}$; the difference is that the neighboring graph should be in $\mathcal{H}$. Therefore, assume an \(n\)-node empty graph for \(G\) with \(n\)-node isolated, and \(G'\) consists of two subgraphs: the first is a star graph with \(d+1\) nodes, and the second is an empty graph with \(n-(d+1)\) nodes. This configuration results in \(n-(d+1)\) isolated nodes. Hence, $RS_{q}^{\mathcal{H}} = d+1$.
+ 
+\end{document}
